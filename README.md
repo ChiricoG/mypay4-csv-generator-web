@@ -1,6 +1,7 @@
 # MyPay4 CSV Generator (Web)
 
 Applicazione web per compilare, validare ed esportare flussi CSV per MyPay4 (tracciato **1_4**), eseguibile interamente nel browser tramite [Pyodide](https://pyodide.org/) (Python in WebAssembly), senza server applicativo.
+Da considerarsi come implementazione delle logiche del repo [MyPay4-CSV-Generator](https://github.com/ChiricoG/MyPay4-CSV-Generator) in ambiente web.
 
 ## Funzionalità principali
 
