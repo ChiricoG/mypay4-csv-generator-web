@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mypay4-csv-generator-web-core"
+version = "0.1.0"
+description = "Core Python web-safe per MyPay4 CSV Generator Web"
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["py"]

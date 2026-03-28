@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MyPay4 — Generatore CSV</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="app-header">
+        <h1>MyPay4 — Generatore CSV</h1>
+        <p class="tagline">Compilazione flussi CSV MyPay4 (tracciato 1_4) direttamente dal browser.</p>
+      </header>
+
+      <section class="toolbar toolbar-main">
+        <button type="button" id="btnNuova" class="btn-success">Nuova riga</button>
+        <button type="button" id="btnModifica" class="btn-accent">Modifica</button>
+        <button type="button" id="btnElimina" class="btn-danger">Elimina</button>
+        <button type="button" id="btnDuplica" class="btn-warning">Duplica</button>
+        <button type="button" id="btnSu" class="btn-sec">Su</button>
+        <button type="button" id="btnGiu" class="btn-sec">Giu</button>
+        <span class="toolbar-sep" aria-hidden="true"></span>
+        <label class="file-label btn-sec">
+          Apri CSV
+          <input id="inputFile" type="file" accept=".csv,.zip" hidden />
+        </label>
+        <button type="button" id="btnSalva" class="btn-accent2">Salva</button>
+        <button type="button" id="btnSalvaCome" class="btn-accent2">Salva come...</button>
+        <span class="toolbar-sep" aria-hidden="true"></span>
+        <button type="button" id="btnNuovaSessione" class="btn-sec">Nuova sessione</button>
+        <span class="toolbar-sep" aria-hidden="true"></span>
+        <button type="button" id="btnBulk" class="btn-warning">Aumento importi</button>
+      </section>
+
+      <section class="info-ente">
+        <label class="ipa-label">
+          Codice IPA:
+          <input id="ipaInput" type="text" value="R_PUGLIA" maxlength="32" autocomplete="organization" />
+        </label>
+        <span id="fnamePreview" class="fname-preview"></span>
+      </section>
+
+      <section id="statusBox" class="status">Caricamento in corso…</section>
+
+      <section class="table-wrap" id="tableWrap" tabindex="0">
+        <table id="rowsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>IUD</th>
+              <th>tipoIdentificativoUnivoco</th>
+              <th>anagraficaPagatore</th>
+              <th>dataEsecuzionePagamento</th>
+              <th>importoDovuto</th>
+              <th>tipoDovuto</th>
+              <th>causaleVersamento</th>
+              <th>bilancio</th>
+              <th>azione</th>
+              <th>flagMultiBeneficiario</th>
+              <th>Errori</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+
+    <dialog id="rowDialog">
+      <form id="rowForm" method="dialog">
+        <h3 id="dlgTitle">Riga</h3>
+        <p class="row-legend"><span class="leg-req">Obbligatorio</span> · <span class="leg-opt">Opzionale</span></p>
+        <div id="rowFields" class="grid"></div>
+        <menu>
+          <button type="submit" value="cancel">Annulla</button>
+          <button type="button" id="btnClearRow">Pulisci tutto</button>
+          <button type="submit" id="btnSaveRow" value="default">Salva riga</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="bulkDialog" class="bulk-dlg">
+      <header class="bulk-hdr">
+        <h3>Aumento massivo importi</h3>
+      </header>
+      <p class="muted">
+        Applica un aumento percentuale o fisso a tutti gli importi del flusso corrente.
+      </p>
+
+      <fieldset class="bulk-fieldset">
+        <legend>Tipo di aumento</legend>
+        <label><input type="radio" name="bulkTipo" value="percentuale" checked /> Percentuale (%)</label>
+        <label><input type="radio" name="bulkTipo" value="fisso" /> Valore fisso (€)</label>
+        <div class="bulk-row-val">
+          <label id="bulkValLabel" for="bulkDelta">Percentuale di aumento (%):</label>
+          <input id="bulkDelta" type="text" inputmode="decimal" class="bulk-delta" />
+        </div>
+      </fieldset>
+
+      <fieldset class="bulk-fieldset">
+        <legend>Gestione bilancio XML</legend>
+        <label
+          ><input type="radio" name="bulkCapMode" value="preesistente" checked /> Aggiungi importi a un capitolo
+          preesistente</label
+        >
+        <div id="bulkSubA" class="bulk-subframe bulk-sub-active">
+          <label class="block">
+            Codice capitolo da aggiornare:
+            <input id="bulkFiltroCap" type="text" />
+          </label>
+          <p class="muted small">(vuoto = aggiorna tutti i capitoli)</p>
+        </div>
+
+        <label
+          ><input type="radio" name="bulkCapMode" value="sostituisci" /> Elimina capitoli esistenti e sostituisci con
+          nuovo capitolo</label
+        >
+        <div id="bulkSubB" class="bulk-subframe">
+          <label class="block">Cod. Capitolo *: <input id="bulkCodCapB" type="text" /></label>
+          <label class="block">Cod. Ufficio: <input id="bulkCodUffB" type="text" /></label>
+          <label class="block">Cod. Accertamento: <input id="bulkCodAccB" type="text" /></label>
+          <p class="muted small italic">Importo: nuovo importo totale (calcolato automaticamente)</p>
+        </div>
+
+        <label
+          ><input type="radio" name="bulkCapMode" value="differenza" /> Aggiungi nuovo capitolo (accoda ai capitoli
+          esistenti)</label
+        >
+        <div id="bulkSubC" class="bulk-subframe">
+          <label class="block">Cod. Capitolo *: <input id="bulkCodCapC" type="text" /></label>
+          <label class="block">Cod. Ufficio: <input id="bulkCodUffC" type="text" /></label>
+          <label class="block">Cod. Accertamento: <input id="bulkCodAccC" type="text" /></label>
+          <p class="muted small italic">Importo: differenza tra nuovo e precedente (calcolata automaticamente)</p>
+        </div>
+      </fieldset>
+
+      <menu>
+        <button type="button" id="btnBulkCancel" class="btn-sec">Annulla</button>
+        <button type="button" id="btnBulkApply" class="btn-accent">Applica a tutte le righe</button>
+      </menu>
+    </dialog>
+
+    <dialog id="dsrDialog" class="helper-dlg">
+      <h3 id="dsrDlgTitle">Helper Dati Specifici Riscossione</h3>
+      <p class="muted">Formato &lt;tipo&gt;/&lt;codice&gt; (come da tracciato MyPay).</p>
+      <label class="field">
+        <span>Tipo contabilità</span>
+        <select id="dsrTipo"></select>
+      </label>
+      <label class="field">
+        <span>Codice contabilità</span>
+        <input id="dsrCodice" type="text" maxlength="138" autocomplete="off" />
+      </label>
+      <p class="dsr-preview">Valore generato: <code id="dsrPreview">—</code></p>
+      <menu>
+        <button type="button" id="dsrBtnCancel">Annulla</button>
+        <button type="button" id="dsrBtnOk">Conferma</button>
+      </menu>
+    </dialog>
+
+    <dialog id="bilancioDialog" class="bilancio-dlg">
+      <div class="bilancio-dlg-inner">
+        <header class="bilancio-hdr">
+          <h3>Editor Bilancio XML</h3>
+          <p id="bilancioImportoHint" class="muted"></p>
+        </header>
+        <p class="muted bilancio-desc">
+          Aggiungi capitoli e accertamenti. La somma degli importi degli accertamenti deve coincidere con l'importo
+          dovuto quando indicato. L'XML viene generato in formato compatibile con MyPay.
+        </p>
+        <div id="bilancioCapitoliRoot" class="bilancio-capitoli"></div>
+        <div class="bilancio-toolbar">
+          <button type="button" id="bilancioAddCap">Aggiungi capitolo</button>
+          <button type="button" id="bilancioPreviewXml" class="btn-secondary">Anteprima XML</button>
+          <span id="bilancioTotal" class="bilancio-total"></span>
+        </div>
+        <menu class="bilancio-menu">
+          <button type="button" id="bilancioBtnClear">Svuota tutto</button>
+          <button type="button" id="bilancioBtnCancel">Annulla</button>
+          <button type="button" id="bilancioBtnOk">Conferma e genera XML</button>
+        </menu>
+      </div>
+    </dialog>
+
+    <dialog id="bilancioPreviewDialog" class="preview-dlg">
+      <h3>Anteprima XML</h3>
+      <pre id="bilancioPreviewPre"></pre>
+      <p id="bilancioPreviewLen" class="muted"></p>
+      <menu>
+        <button type="button" id="bilancioPreviewClose">Chiudi</button>
+      </menu>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
