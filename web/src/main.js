@@ -453,7 +453,11 @@ async function loadCoreFiles() {
     "bulk_increase.py",
   ];
   pyodide.FS.mkdirTree("/app/mypay4_core");
-  const pyBase = new URL("../py/mypay4_core/", import.meta.url).href;
+
+  // Ricava il base URL della cartella py/mypay4_core/ in modo robusto,
+  // usando import.meta.url (URL dello script stesso: web/src/main.js)
+  // indipendentemente da redirect o dalla struttura del deploy.
+  const pyBase = new URL("../../py/mypay4_core/", import.meta.url).href;
 
   for (const name of files) {
     const res = await fetch(`${pyBase}${name}`);
