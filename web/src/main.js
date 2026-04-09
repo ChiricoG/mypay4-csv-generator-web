@@ -453,8 +453,10 @@ async function loadCoreFiles() {
     "bulk_increase.py",
   ];
   pyodide.FS.mkdirTree("/app/mypay4_core");
+  const pyBase = new URL("../py/mypay4_core/", import.meta.url).href;
+
   for (const name of files) {
-    const res = await fetch(`../py/mypay4_core/${name}`);
+    const res = await fetch(`${pyBase}${name}`);
     if (!res.ok) {
       throw new Error(`Impossibile caricare ${name}`);
     }
